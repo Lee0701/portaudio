@@ -133,28 +133,6 @@ endif()
 include(CMakeDependentOption)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
-# JACK is most commonly used on Linux, but it is cross platform, so allow building it on any OS
-# if the FindJACK.cmake module finds POSIX headers.
-find_package(JACK)
-cmake_dependent_option(PA_USE_JACK "Enable support for JACK Audio Connection Kit" ON JACK_FOUND OFF)
-if(PA_USE_JACK)
-  target_link_libraries(PortAudio PRIVATE JACK::jack)
-  target_sources(PortAudio PRIVATE
-    src/hostapi/jack/pa_jack.c
-    src/os/unix/pa_pthread_util.c
-    src/os/unix/pa_pthread_util.h
-  )
-  set(PORTAUDIO_PUBLIC_HEADERS "${PORTAUDIO_PUBLIC_HEADERS}" include/pa_jack.h)
-  target_include_directories(PortAudio PRIVATE src/os/unix) # for pa_pthread_util.h
-  target_compile_definitions(PortAudio PUBLIC PA_USE_JACK=1)
-  set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS} -DPA_USE_JACK=1")
-  set(PKGCONFIG_REQUIRES_PRIVATE "${PKGCONFIG_REQUIRES_PRIVATE} jack")
-
-  # needed for PortAudioConfig.cmake so `find_package(PortAudio)` works in downstream projects
-  install(FILES cmake/modules/FindRegex.cmake DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/portaudio/modules")
-  install(FILES cmake/modules/FindJACK.cmake DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/portaudio/modules")
-endif()
-
 if(WIN32)
   target_sources(PortAudio PRIVATE
     src/os/win/pa_win_coinitialize.c
